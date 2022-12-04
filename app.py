@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np 
+import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.model_selection import train_test_split
@@ -123,6 +124,7 @@ with tab3:
     model2 = st.checkbox("Naive Bayes")
     model3 = st.checkbox("Random Forest")
     model4 = st.checkbox("Ensamble Stacking")
+    eval = st.checkbox("Grafik Model")
 
     if model1:
         model = KNeighborsClassifier(n_neighbors=3)
@@ -167,6 +169,53 @@ with tab3:
         score=metrics.accuracy_score(y_test,Y_pred)
         loaded_model = pickle.load(open(filename, 'rb'))
         st.write("Hasil Akurasi Algoritma Ensamble Stacking : ",score)
+
+    if eval :
+        estimators = [
+        ('rf_1', RandomForestClassifier(n_estimators=10, random_state=42)),
+        ('knn_1', KNeighborsClassifier(n_neighbors=10))             
+        ]
+
+        model1 = KNeighborsClassifier(n_neighbors=3)
+        model2 = GaussianNB()
+        model3 = RandomForestClassifier(n_estimators = 100) 
+        model4 = StackingClassifier(estimators=estimators, final_estimator=GaussianNB())
+
+        # KNN
+        model1.fit(X_train, y_train)
+        Y_pred1 = model1.predict(X_test) 
+
+        # gaussianNB
+        model2.fit(X_train, y_train)
+        Y_pred2 = model2.predict(X_test)
+
+        # Random Forest
+        model3.fit(X_train, y_train)
+        Y_pred3 = model3.predict(X_test) 
+
+        # Ensamble
+        model4.fit(X_train, y_train)
+        Y_pred4 = model4.predict(X_test) 
+
+        from sklearn import metrics
+        score1=metrics.accuracy_score(y_test,Y_pred1)
+        score2=metrics.accuracy_score(y_test,Y_pred2)
+        score3=metrics.accuracy_score(y_test,Y_pred3)
+        score4=metrics.accuracy_score(y_test,Y_pred4)
+
+        import altair as alt
+        # st.snow()
+        chart_data = pd.DataFrame({
+            'Nilai Akurasi' : [score1,score2,score3,score4],
+            'Nama Model' : ['KNN','Naive Bayes','Random Forest','Ensamble Stacking']
+        })
+        bar_chart = alt.Chart(chart_data).mark_bar().encode(
+            y = 'Nilai Akurasi',
+            x = 'Nama Model'
+        )
+
+        st.altair_chart(bar_chart,use_container_width=True)
+
 
 with tab4:
     # Min_Max Normalisasi
